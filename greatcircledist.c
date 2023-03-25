@@ -12,11 +12,12 @@
  * Licence: MIT (free to use as you like, with attribution)
  *****************************************************************************/
 
-#include <stdio.h>   // printf, fprintf
-#include <stdlib.h>  // strtod
-#include <string.h>  // strlen
-#include <math.h>    // sin, cos, asin, sqrt
-#include <errno.h>   // errno, ERANGE
+#include <stdio.h>    // printf, fprintf
+#include <stdlib.h>   // strtod
+#include <string.h>   // strlen
+#include <math.h>     // sin, cos, asin, sqrt
+#include <errno.h>    // errno, ERANGE
+#include <stdbool.h>  // bool
 
 #define E_NUMARG  1
 #define E_INVALID 2
@@ -24,6 +25,7 @@
 #define E_LAT90   4
 #define E_LON180  5
 
+#define EPS  1e-8  // epsilon for double comparison
 #define D2R  1.74532925199432953e-2  // pi/180 (degrees to radians)
 #define D2RH 8.72664625997164656e-3  // pi/360 (degrees to radians, half)
 
@@ -39,30 +41,49 @@ typedef union {
     struct { double lat1, lon1, lat2, lon2; };
 } Segment;
 
-// Local earth radius in metres, from latitude in radians
-// Ref.: https://en.wikipedia.org/wiki/Earth_radius#Location-dependent_radii
-static double local_earth_radius(const double lat)
+static bool equal(const double a, const double b)
 {
+    return fabs(a - b) <= EPS;
+}
+
+// Local earth diameter in metres, from latitude in degrees.
+// Ref.: https://en.wikipedia.org/wiki/Earth_radius#Location-dependent_radii
+static double local_earth_diameter(const double latdeg)
+{
+    if (equal(latdeg, 0))
+        return 2 * R_EQT;
+    if (equal(latdeg, 90) || equal(latdeg, -90))
+        return 2 * R_POL;
+    double lat = latdeg * D2R;
     double s = sin(lat), c = cos(lat);
     double rs2 = R_POL2 * s * s;
     double rc2 = R_EQT2 * c * c;
-    return sqrt((R_POL2 * rs2 + R_EQT2 * rc2) / (rs2 + rc2));
+    return 2 * sqrt((R_POL2 * rs2 + R_EQT2 * rc2) / (rs2 + rc2));
 }
 
-// Inverse haversine function for 2 lat/lon points in degrees
+// Great circle distance in metres, using local earth radius and
+// inverse haversine function, for 2 lat/lon points in degrees.
 // Ref.: https://en.wikipedia.org/wiki/Haversine_formula#Formulation
-static double inverse_haversine(const Segment a)
-{
-    double slat = sin((a.lat2 - a.lat1) * D2RH);  // sin lat diff
-    double slon = sin((a.lon2 - a.lon1) * D2RH);  // sin lon diff
-    return asin(sqrt(slat * slat + cos(a.lat1 * D2R) * cos(a.lat2 * D2R) * slon * slon));
-}
-
-// Great circle distance in metres, using local earth radius and (arc-) haversine
 static double great_circle_distance(const Segment a)
 {
-    double midlat = (a.lat1 + a.lat2) * D2RH;  // average latitude in radians
-    return 2 * local_earth_radius(midlat) * inverse_haversine(a);
+    double dlat = a.lat2 - a.lat1;
+    double dlon = a.lon2 - a.lon1;
+    bool eqlat = equal(dlat, 0);
+    bool eqlon = equal(dlon, 0);
+
+    if (eqlat && eqlon)
+        return 0;
+
+    if (eqlat)
+        return local_earth_diameter(a.lat1) * asin(fabs(cos(a.lat1 * D2R) * sin(dlon * D2RH)));
+
+    double D = local_earth_diameter((a.lat1 + a.lat2) / 2);
+    if (eqlon)
+        return D * asin(fabs(sin((a.lat2 - a.lat1) * D2RH)));
+
+    double slat = sin(dlat * D2RH);  // sin lat diff
+    double slon = sin(dlon * D2RH);  // sin lon diff
+    return D * asin(sqrt(slat * slat + cos(a.lat1 * D2R) * cos(a.lat2 * D2R) * slon * slon));
 }
 
 int main(int argc, char *argv[])
