@@ -79,7 +79,7 @@ static double great_circle_distance(const Segment a)
 
     double D = local_earth_diameter((a.lat1 + a.lat2) / 2);
     if (eqlon)
-        return D * asin(fabs(sin((a.lat2 - a.lat1) * D2RH)));
+        return D * asin(fabs(sin(dlat * D2RH)));
 
     double slat = sin(dlat * D2RH);  // sin lat diff
     double slon = sin(dlon * D2RH);  // sin lon diff
