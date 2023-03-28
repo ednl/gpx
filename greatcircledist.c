@@ -25,7 +25,7 @@
 #define E_LAT90   4
 #define E_LON180  5
 
-#define EPS  1e-8  // epsilon for double comparison
+#define EPS  1e-10  // epsilon for double comparison
 #define D2R  1.74532925199432953e-2  // pi/180 (degrees to radians)
 #define D2RH 8.72664625997164656e-3  // pi/360 (degrees to radians, half)
 
