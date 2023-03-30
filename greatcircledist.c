@@ -25,7 +25,7 @@
 #define E_LAT90   4
 #define E_LON180  5
 
-#define EPS  1e-10  // epsilon for double comparison
+#define EPS  1e-8  // epsilon for double comparison (range [-180,+180])
 #define D2R  1.74532925199432953e-2  // pi/180 (degrees to radians)
 #define D2RH 8.72664625997164656e-3  // pi/360 (degrees to radians, half)
 
@@ -50,10 +50,10 @@ static bool equal(const double a, const double b)
 // Ref.: https://en.wikipedia.org/wiki/Earth_radius#Location-dependent_radii
 static double local_earth_diameter(const double latdeg)
 {
-    if (equal(latdeg, 0))
-        return 2 * R_EQT;
-    if (equal(latdeg, 90) || equal(latdeg, -90))
-        return 2 * R_POL;
+    // if (equal(latdeg, 0))
+    //     return 2 * R_EQT;
+    // if (equal(latdeg, 90) || equal(latdeg, -90))
+    //     return 2 * R_POL;
     double lat = latdeg * D2R;
     double s = sin(lat), c = cos(lat);
     double rs2 = R_POL2 * s * s;
@@ -68,18 +68,18 @@ static double great_circle_distance(const Segment a)
 {
     double dlat = a.lat2 - a.lat1;
     double dlon = a.lon2 - a.lon1;
-    bool eqlat = equal(dlat, 0);
-    bool eqlon = equal(dlon, 0);
+    // bool eqlat = equal(dlat, 0);
+    // bool eqlon = equal(dlon, 0);
 
-    if (eqlat && eqlon)
-        return 0;
+    // if (eqlat && eqlon)
+    //     return 0;
 
-    if (eqlat)
-        return local_earth_diameter(a.lat1) * asin(fabs(cos(a.lat1 * D2R) * sin(dlon * D2RH)));
+    // if (eqlat)
+    //     return local_earth_diameter(a.lat1) * asin(fabs(cos(a.lat1 * D2R) * sin(dlon * D2RH)));
 
     double D = local_earth_diameter((a.lat1 + a.lat2) / 2);
-    if (eqlon)
-        return D * asin(fabs(sin(dlat * D2RH)));
+    // if (eqlon)
+    //     return D * asin(fabs(sin(dlat * D2RH)));
 
     double slat = sin(dlat * D2RH);  // sin lat diff
     double slon = sin(dlon * D2RH);  // sin lon diff
