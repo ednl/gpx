@@ -5,8 +5,8 @@
  *
  *     greatcircledist lat1 lon1 lat2 lon2
  *
- * where all arguments are floating point numbers in degrees. Outputs distance
- * in metres between (lat1,lon1) and (lat2,lon2) with precision in centimetres.
+ * where all arguments are decimal degrees. Outputs distance in metres between
+ * (lat1,lon1) and (lat2,lon2) with precision in centimetres.
  *
  * Author: E. Dronkert https://github.com/ednl
  * Licence: MIT (free to use as you like, with attribution)
@@ -20,7 +20,7 @@
 
 // Error exit codes
 #define ERR_NUMARG  1  // number of arguments must be 4
-#define ERR_INVALID 2  // whole argument must be a fp number
+#define ERR_INVALID 2  // argument must be a floating point number in the C locale
 #define ERR_RANGE   3  // argument must be a valid double
 #define ERR_LAT90   4  // latitude must be between -90 and +90
 #define ERR_LON180  5  // longitude must be between -180 and +180
